@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STRK Loader</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy-darkest: #050810;
+            --navy-dark:    #0a0f1e;
+            --navy-mid:     #0f1a35;
+            --navy-light:   #162040;
+            --accent:       #4a9eff;
+            --accent-glow:  #4a9eff55;
+            --accent-dim:   #1a6fc4;
+            --text:         #e8f0ff;
+            --text-dim:     #8ca0c8;
+            --card-bg:      rgba(10, 18, 40, 0.75);
+            --card-border:  rgba(74, 158, 255, 0.18);
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--navy-darkest);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ── Connecting-dots canvas ── */
+        #canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        /* ── Layout ── */
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 52px 48px 44px;
+            max-width: 480px;
+            width: 100%;
+            backdrop-filter: blur(18px);
+            box-shadow:
+                0 0 0 1px var(--card-border),
+                0 8px 60px rgba(0, 0, 0, 0.6),
+                0 0 80px rgba(74, 158, 255, 0.06);
+            text-align: center;
+        }
+
+        /* ── Badge ── */
+        .badge {
+            display: inline-block;
+            background: rgba(74, 158, 255, 0.12);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 100px;
+            margin-bottom: 22px;
+        }
+
+        /* ── Logo / title ── */
+        .logo {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #ffffff 30%, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo span {
+            color: var(--accent);
+            -webkit-text-fill-color: var(--accent);
+        }
+
+        .tagline {
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-bottom: 32px;
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--card-border), transparent);
+            margin: 28px 0;
+        }
+
+        /* ── Features ── */
+        .features {
+            list-style: none;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .features li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        .features li::before {
+            content: '';
+            display: block;
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            background: rgba(74, 158, 255, 0.15);
+            border: 1px solid rgba(74, 158, 255, 0.4);
+            border-radius: 50%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%234a9eff' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* ── Price ── */
+        .price-block {
+            margin-bottom: 28px;
+        }
+
+        .price {
+            font-size: 52px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1;
+            color: #fff;
+        }
+
+        .price sup {
+            font-size: 24px;
+            font-weight: 700;
+            vertical-align: super;
+            letter-spacing: 0;
+        }
+
+        .price-note {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Buy button ── */
+        .btn-buy {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 24px rgba(74, 158, 255, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-buy::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .btn-buy:hover {
+            filter: brightness(1.12);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 32px rgba(74, 158, 255, 0.5);
+        }
+
+        .btn-buy:active {
+            transform: translateY(0);
+            filter: brightness(0.97);
+        }
+
+        /* ── Footer note ── */
+        .secure-note {
+            margin-top: 18px;
+            font-size: 12px;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .secure-note svg {
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="page">
+    <div class="card">
+        <div class="badge">Animal Company</div>
+        <div class="logo">STRK<span> Loader</span></div>
+        <div class="tagline">The ultimate mod loader for Animal Company</div>
+
+        <div class="divider"></div>
+
+        <ul class="features">
+            <li>Mob spawning in all areas</li>
+            <li>UFO &amp; ship spawner</li>
+            <li>Player mods &amp; tools</li>
+            <li>MomBoss controls</li>
+            <li>Instant updates included</li>
+        </ul>
+
+        <div class="divider"></div>
+
+        <div class="price-block">
+            <div class="price"><sup>$</sup>10</div>
+            <div class="price-note">ONE-TIME PURCHASE &nbsp;·&nbsp; LIFETIME ACCESS</div>
+        </div>
+
+        <a class="btn-buy" href="https://buy.stripe.com/test_28E28t9h91zr5Tp98K1VK00" target="_blank" rel="noopener">
+            Buy Now
+        </a>
+
+        <div class="secure-note">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="5.5" width="9" height="6.5" rx="1.5" stroke="#8ca0c8" stroke-width="1.2"/>
+                <path d="M4 5.5V4a2.5 2.5 0 015 0v1.5" stroke="#8ca0c8" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Secured by Stripe &nbsp;·&nbsp; Apple Pay &amp; Google Pay accepted
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Connecting dots background ──────────────────────────────────────────────
+(function () {
+    const canvas = document.getElementById('canvas');
+    const ctx    = canvas.getContext('2d');
+
+    const CONFIG = {
+        dotCount:      90,
+        dotRadius:     1.8,
+        dotSpeed:      0.35,
+        connectDist:   140,
+        dotColor:      '74, 120, 220',
+        lineColor:     '74, 158, 255',
+        dotOpacity:    0.7,
+        lineOpacityMax: 0.22,
+    };
+
+    let W, H, dots;
+
+    function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+
+    function makeDot() {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = CONFIG.dotSpeed * (0.4 + Math.random() * 0.6);
+        return {
+            x:  Math.random() * W,
+            y:  Math.random() * H,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            r:  CONFIG.dotRadius * (0.6 + Math.random() * 0.8),
+        };
+    }
+
+    function init() {
+        resize();
+        dots = Array.from({ length: CONFIG.dotCount }, makeDot);
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+
+        // Update positions
+        for (const d of dots) {
+            d.x += d.vx;
+            d.y += d.vy;
+            if (d.x < 0) d.x = W;
+            if (d.x > W) d.x = 0;
+            if (d.y < 0) d.y = H;
+            if (d.y > H) d.y = 0;
+        }
+
+        // Draw connections
+        for (let i = 0; i < dots.length; i++) {
+            for (let j = i + 1; j < dots.length; j++) {
+                const dx   = dots[i].x - dots[j].x;
+                const dy   = dots[i].y - dots[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < CONFIG.connectDist) {
+                    const alpha = CONFIG.lineOpacityMax * (1 - dist / CONFIG.connectDist);
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(${CONFIG.lineColor}, ${alpha})`;
+                    ctx.lineWidth   = 0.8;
+                    ctx.moveTo(dots[i].x, dots[i].y);
+                    ctx.lineTo(dots[j].x, dots[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Draw dots
+        for (const d of dots) {
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${CONFIG.dotColor}, ${CONFIG.dotOpacity})`;
+            ctx.fill();
+        }
+
+        requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', () => { resize(); });
+    init();
+    draw();
+})();
+</script>
+
+</body>
+</html>
