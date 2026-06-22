@@ -64,8 +64,8 @@ async function handlePaymentSuccess(session) {
 
     // Send email with license key via Brevo
     const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.subject = 'Your STRK Loader License Key';
     sendSmtpEmail.htmlContent = `
       <h2>Welcome to STRK Loader!</h2>
@@ -82,10 +82,17 @@ async function handlePaymentSuccess(session) {
     console.log('Sending email via Brevo...');
     console.log('From:', process.env.BREVO_FROM_EMAIL);
     console.log('To:', customerEmail);
+    console.log('API Key exists:', !!process.env.BREVO_API_KEY);
 
-    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('Email sent successfully:', JSON.stringify(result, null, 2));
-    console.log(`License key emailed to ${customerEmail}`);
+    try {
+      const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+      console.log('Email sent successfully!');
+      console.log('Result:', result);
+      console.log(`License key emailed to ${customerEmail}`);
+    } catch (emailError) {
+      console.error('Brevo API Error:', emailError);
+      throw emailError;
+    }
 
     // TODO: Store license key in database for tracking
     // await saveLicenseKey(customerEmail, licenseKey, session.id);
