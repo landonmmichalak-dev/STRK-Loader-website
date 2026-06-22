@@ -273,55 +273,51 @@
     const ctx    = canvas.getContext('2d');
 
     let W, H, time = 0;
-    let imageData, data;
 
     function resize() {
         W = canvas.width  = window.innerWidth;
         H = canvas.height = window.innerHeight;
-        imageData = ctx.createImageData(W, H);
-        data = imageData.data;
     }
 
-    // Perlin-like noise generator
-    function noise(x, y, z) {
-        const n = Math.sin(x * 12.9898 + y * 78.233 + z * 45.164) * 43758.5453;
-        return n - Math.floor(n);
+    function drawNebula() {
+        // Create multiple radial gradients for nebula clouds
+        const centerX = W / 2 + Math.sin(time * 0.001) * W * 0.3;
+        const centerY = H / 2 + Math.cos(time * 0.0008) * H * 0.2;
+
+        // Layer 1: Blue base
+        let grad1 = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, W * 0.8);
+        grad1.addColorStop(0, 'rgba(100, 150, 255, 0.4)');
+        grad1.addColorStop(0.5, 'rgba(40, 80, 150, 0.2)');
+        grad1.addColorStop(1, 'rgba(5, 8, 16, 0)');
+        ctx.fillStyle = grad1;
+        ctx.fillRect(0, 0, W, H);
+
+        // Layer 2: Purple accent (offset)
+        const centerX2 = W / 2 + Math.sin(time * 0.0012 + Math.PI) * W * 0.2;
+        const centerY2 = H / 2 + Math.cos(time * 0.0015 + Math.PI) * H * 0.3;
+        let grad2 = ctx.createRadialGradient(centerX2, centerY2, 0, centerX2, centerY2, W * 0.7);
+        grad2.addColorStop(0, 'rgba(150, 100, 200, 0.3)');
+        grad2.addColorStop(0.5, 'rgba(80, 40, 120, 0.15)');
+        grad2.addColorStop(1, 'rgba(5, 8, 16, 0)');
+        ctx.fillStyle = grad2;
+        ctx.fillRect(0, 0, W, H);
+
+        // Layer 3: Cyan accent
+        const centerX3 = W / 2 + Math.sin(time * 0.001 + Math.PI * 0.5) * W * 0.25;
+        const centerY3 = H / 2 + Math.cos(time * 0.0013 + Math.PI * 0.5) * H * 0.25;
+        let grad3 = ctx.createRadialGradient(centerX3, centerY3, 0, centerX3, centerY3, W * 0.6);
+        grad3.addColorStop(0, 'rgba(74, 158, 255, 0.25)');
+        grad3.addColorStop(0.6, 'rgba(30, 80, 150, 0.1)');
+        grad3.addColorStop(1, 'rgba(5, 8, 16, 0)');
+        ctx.fillStyle = grad3;
+        ctx.fillRect(0, 0, W, H);
     }
 
     function draw() {
-        const pixelData = new Uint8ClampedArray(W * H * 4);
+        ctx.fillStyle = 'rgba(5, 8, 16, 0.05)';
+        ctx.fillRect(0, 0, W, H);
 
-        for (let y = 0; y < H; y++) {
-            for (let x = 0; x < W; x++) {
-                const idx = (y * W + x) * 4;
-
-                // Generate nebula using layered noise
-                const n1 = noise(x * 0.002, y * 0.002, time * 0.01) * 0.6;
-                const n2 = noise(x * 0.004 + 100, y * 0.004 + 100, time * 0.015) * 0.3;
-                const n3 = noise(x * 0.001 + 200, y * 0.001 + 200, time * 0.008) * 0.1;
-
-                const combined = n1 + n2 + n3;
-                const intensity = Math.pow(combined, 1.5);
-
-                // Blue nebula colors
-                let r = Math.floor(10 + intensity * 40);
-                let g = Math.floor(25 + intensity * 80);
-                let b = Math.floor(60 + intensity * 120);
-
-                // Add purple tones
-                if (intensity > 0.6) {
-                    r = Math.floor(r + (intensity - 0.6) * 100);
-                }
-
-                pixelData[idx] = Math.min(r, 255);
-                pixelData[idx + 1] = Math.min(g, 255);
-                pixelData[idx + 2] = Math.min(b, 255);
-                pixelData[idx + 3] = 255;
-            }
-        }
-
-        imageData.data.set(pixelData);
-        ctx.putImageData(imageData, 0, 0);
+        drawNebula();
 
         time += 1;
         requestAnimationFrame(draw);
