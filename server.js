@@ -46,11 +46,16 @@ function generateLicenseKey() {
 // Handle successful payment
 async function handlePaymentSuccess(session) {
   try {
+    console.log('=== WEBHOOK RECEIVED ===');
+    console.log('Session ID:', session.id);
+    console.log('Session object:', JSON.stringify(session, null, 2));
+
     const licenseKey = generateLicenseKey();
     const customerEmail = session.customer_details?.email;
 
     if (!customerEmail) {
-      console.error('No customer email in session:', session.id);
+      console.error('ERROR: No customer email in session:', session.id);
+      console.error('Customer details:', JSON.stringify(session.customer_details, null, 2));
       return;
     }
 
@@ -74,15 +79,22 @@ async function handlePaymentSuccess(session) {
     sendSmtpEmail.sender = { name: 'STRK Loader', email: process.env.BREVO_FROM_EMAIL };
     sendSmtpEmail.to = [{ email: customerEmail }];
 
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('Sending email via Brevo...');
+    console.log('From:', process.env.BREVO_FROM_EMAIL);
+    console.log('To:', customerEmail);
 
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log('Email sent successfully:', JSON.stringify(result, null, 2));
     console.log(`License key emailed to ${customerEmail}`);
 
     // TODO: Store license key in database for tracking
     // await saveLicenseKey(customerEmail, licenseKey, session.id);
 
   } catch (error) {
-    console.error('Error handling payment:', error);
+    console.error('=== ERROR HANDLING PAYMENT ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Full error:', JSON.stringify(error, null, 2));
   }
 }
 
