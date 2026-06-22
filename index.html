@@ -267,59 +267,61 @@
 </div>
 
 <script>
-// ── Wave animation background ──────────────────────────────────────────────
+// ── Nebula effect background ──────────────────────────────────────────────
 (function () {
     const canvas = document.getElementById('canvas');
     const ctx    = canvas.getContext('2d');
 
     let W, H, time = 0;
+    let imageData, data;
 
     function resize() {
         W = canvas.width  = window.innerWidth;
         H = canvas.height = window.innerHeight;
+        imageData = ctx.createImageData(W, H);
+        data = imageData.data;
     }
 
-    function drawWave(amplitude, frequency, phase, yOffset, color, opacity) {
-        ctx.beginPath();
-        ctx.strokeStyle = `rgba(${color}, ${opacity})`;
-        ctx.lineWidth = 2;
-
-        for (let x = 0; x <= W; x += 5) {
-            const y = yOffset + Math.sin((x * frequency + time * phase) / 100) * amplitude;
-            if (x === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-
-        ctx.stroke();
-    }
-
-    function fillWave(amplitude, frequency, phase, yOffset, color, opacity) {
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(${color}, ${opacity})`;
-
-        for (let x = 0; x <= W; x += 5) {
-            const y = yOffset + Math.sin((x * frequency + time * phase) / 100) * amplitude;
-            if (x === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-
-        ctx.lineTo(W, H);
-        ctx.lineTo(0, H);
-        ctx.closePath();
-        ctx.fill();
+    // Perlin-like noise generator
+    function noise(x, y, z) {
+        const n = Math.sin(x * 12.9898 + y * 78.233 + z * 45.164) * 43758.5453;
+        return n - Math.floor(n);
     }
 
     function draw() {
-        ctx.clearRect(0, 0, W, H);
+        const pixelData = new Uint8ClampedArray(W * H * 4);
 
-        // Draw filled waves (subtle background)
-        fillWave(30, 0.008, 1.5, H * 0.4, '74, 120, 220', 0.05);
-        fillWave(25, 0.006, 1, H * 0.5, '74, 158, 255', 0.08);
+        for (let y = 0; y < H; y++) {
+            for (let x = 0; x < W; x++) {
+                const idx = (y * W + x) * 4;
 
-        // Draw outline waves (more visible)
-        drawWave(30, 0.008, 1.5, H * 0.4, '74, 158, 255', 0.15);
-        drawWave(25, 0.006, 1, H * 0.5, '74, 158, 255', 0.12);
-        drawWave(20, 0.004, 0.8, H * 0.6, '74, 158, 255', 0.1);
+                // Generate nebula using layered noise
+                const n1 = noise(x * 0.002, y * 0.002, time * 0.01) * 0.6;
+                const n2 = noise(x * 0.004 + 100, y * 0.004 + 100, time * 0.015) * 0.3;
+                const n3 = noise(x * 0.001 + 200, y * 0.001 + 200, time * 0.008) * 0.1;
+
+                const combined = n1 + n2 + n3;
+                const intensity = Math.pow(combined, 1.5);
+
+                // Blue nebula colors
+                let r = Math.floor(10 + intensity * 40);
+                let g = Math.floor(25 + intensity * 80);
+                let b = Math.floor(60 + intensity * 120);
+
+                // Add purple tones
+                if (intensity > 0.6) {
+                    r = Math.floor(r + (intensity - 0.6) * 100);
+                }
+
+                pixelData[idx] = Math.min(r, 255);
+                pixelData[idx + 1] = Math.min(g, 255);
+                pixelData[idx + 2] = Math.min(b, 255);
+                pixelData[idx + 3] = 255;
+            }
+        }
+
+        imageData.data.set(pixelData);
+        ctx.putImageData(imageData, 0, 0);
 
         time += 1;
         requestAnimationFrame(draw);
