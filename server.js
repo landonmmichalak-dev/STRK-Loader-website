@@ -83,7 +83,7 @@ async function handlePaymentSuccess(session) {
       <p>Use this key to activate STRK Loader. Keep it safe!</p>
       <p>Questions? Reply to this email or visit our support page.</p>
     `;
-    sendSmtpEmail.sender = { name: 'STRK Loader', email: 'landonmichalak539@gmail.com' };
+    sendSmtpEmail.sender = { name: 'STRK Loader', email: 'landonmmichalak@gmail.com' };
     sendSmtpEmail.to = [{ email: customerEmail }];
 
     console.log('Sending email via Brevo...');
