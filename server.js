@@ -7,6 +7,22 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Track issued keys and prevent duplicates
+const ISSUED_KEYS_FILE = 'issued_keys.json';
+
+function loadIssuedKeys() {
+  try {
+    const data = require('fs').readFileSync(ISSUED_KEYS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch {
+    return {};
+  }
+}
+
+function saveIssuedKeys(data) {
+  require('fs').writeFileSync(ISSUED_KEYS_FILE, JSON.stringify(data, null, 2));
+}
+
 // Log environment variables on startup
 console.log('=== STARTUP ===');
 console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
@@ -60,18 +76,24 @@ async function handlePaymentSuccess(session) {
   try {
     console.log('=== WEBHOOK RECEIVED ===');
     console.log('Session ID:', session.id);
-    console.log('Session object:', JSON.stringify(session, null, 2));
 
-    const licenseKey = generateLicenseKey();
     const customerEmail = session.customer_details?.email;
 
     if (!customerEmail) {
       console.error('ERROR: No customer email in session:', session.id);
-      console.error('Customer details:', JSON.stringify(session.customer_details, null, 2));
       return;
     }
 
     console.log(`Processing payment for ${customerEmail}`);
+
+    // Check if this session already issued a key (prevent webhook retries from issuing duplicates)
+    const issuedKeys = loadIssuedKeys();
+    if (issuedKeys[session.id]) {
+      console.log(`Session ${session.id} already issued key. Skipping duplicate.`);
+      return;
+    }
+
+    const licenseKey = generateLicenseKey();
     console.log(`Generated license key: ${licenseKey}`);
 
     // Send email with license key via Brevo
@@ -101,20 +123,27 @@ async function handlePaymentSuccess(session) {
       console.log('Creating Brevo API instance...');
       const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
       console.log('Email sent successfully!');
-      console.log('Brevo response:', JSON.stringify(result, null, 2));
       console.log(`License key emailed to ${customerEmail}`);
+
+      // Track issued key to prevent duplicates
+      const issuedKeys = loadIssuedKeys();
+      issuedKeys[session.id] = {
+        email: customerEmail,
+        key: licenseKey,
+        issuedAt: new Date().toISOString(),
+        stripeSessionId: session.id
+      };
+      saveIssuedKeys(issuedKeys);
+      console.log(`Key tracked for session ${session.id}`);
+
     } catch (emailError) {
       console.error('=== BREVO EMAIL ERROR ===');
       console.error('Error type:', emailError.constructor.name);
       console.error('Error message:', emailError.message);
       console.error('Error status:', emailError.status);
       console.error('Error response:', emailError.response);
-      console.error('Full error:', JSON.stringify(emailError, null, 2));
       throw emailError;
     }
-
-    // TODO: Store license key in database for tracking
-    // await saveLicenseKey(customerEmail, licenseKey, session.id);
 
   } catch (error) {
     console.error('=== ERROR HANDLING PAYMENT ===');
