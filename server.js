@@ -107,8 +107,15 @@ async function handlePaymentSuccess(session) {
       <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; font-family: monospace; font-size: 16px; text-align: center; margin: 20px 0;">
         <strong>${licenseKey}</strong>
       </div>
-      <p>Use this key to activate STRK Loader. Keep it safe!</p>
-      <p>Questions? Reply to this email or visit our support page.</p>
+      <h3>Next Steps:</h3>
+      <ol>
+        <li><strong>Join our Discord:</strong> <a href="https://discord.gg/your-server-link">discord.gg/strk</a></li>
+        <li><strong>Claim your Premium role:</strong> Run <code>/claim-strk ${licenseKey}</code> in any channel</li>
+        <li><strong>Access the loader:</strong> You'll get access to the download channel</li>
+      </ol>
+      <p style="margin-top: 20px; color: #666; font-size: 14px;">
+        Keep your license key private — do not share it. Each key can only be used once.
+      </p>
     `;
     sendSmtpEmail.sender = { name: 'STRK Loader', email: 'landonmichalak539@gmail.com' };
     sendSmtpEmail.to = [{ email: customerEmail }];
