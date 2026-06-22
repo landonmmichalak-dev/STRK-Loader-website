@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 require('dotenv').config();
@@ -12,6 +13,9 @@ console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
 console.log('STRIPE_WEBHOOK_SECRET exists:', !!process.env.STRIPE_WEBHOOK_SECRET);
 console.log('BREVO_API_KEY exists:', !!process.env.BREVO_API_KEY);
 console.log('BREVO_FROM_EMAIL:', process.env.BREVO_FROM_EMAIL);
+console.log('HMAC_SECRET exists:', !!process.env.HMAC_SECRET);
+console.log('HMAC_SECRET length:', process.env.HMAC_SECRET?.length || 0);
+console.log('HMAC_SECRET first 5 chars:', process.env.HMAC_SECRET?.substring(0, 5) || 'NONE');
 
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
 defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
@@ -44,10 +48,11 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   res.sendStatus(200);
 });
 
-// Generate license key in format STRK-{8-hex}-{8-hex}
+// Generate license key in format STRK-{8-hex}-{8-hex-sig}
 function generateLicenseKey() {
-  const randomHex = () => Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase().padStart(8, '0');
-  return `STRK-${randomHex()}-${randomHex()}`;
+  const data = crypto.randomBytes(4).toString('hex').toUpperCase();
+  const sig = crypto.createHmac('sha256', process.env.HMAC_SECRET).update(data).digest('hex').substring(0, 8).toUpperCase();
+  return `STRK-${data}-${sig}`;
 }
 
 // Handle successful payment
