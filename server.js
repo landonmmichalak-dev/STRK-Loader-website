@@ -6,6 +6,13 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Log environment variables on startup
+console.log('=== STARTUP ===');
+console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
+console.log('STRIPE_WEBHOOK_SECRET exists:', !!process.env.STRIPE_WEBHOOK_SECRET);
+console.log('BREVO_API_KEY exists:', !!process.env.BREVO_API_KEY);
+console.log('BREVO_FROM_EMAIL:', process.env.BREVO_FROM_EMAIL);
+
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
 defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
 
@@ -83,14 +90,21 @@ async function handlePaymentSuccess(session) {
     console.log('From:', process.env.BREVO_FROM_EMAIL);
     console.log('To:', customerEmail);
     console.log('API Key exists:', !!process.env.BREVO_API_KEY);
+    console.log('API Key length:', process.env.BREVO_API_KEY?.length);
 
     try {
+      console.log('Creating Brevo API instance...');
       const result = await apiInstance.sendTransacEmail(sendSmtpEmail);
       console.log('Email sent successfully!');
-      console.log('Result:', result);
+      console.log('Brevo response:', JSON.stringify(result, null, 2));
       console.log(`License key emailed to ${customerEmail}`);
     } catch (emailError) {
-      console.error('Brevo API Error:', emailError);
+      console.error('=== BREVO EMAIL ERROR ===');
+      console.error('Error type:', emailError.constructor.name);
+      console.error('Error message:', emailError.message);
+      console.error('Error status:', emailError.status);
+      console.error('Error response:', emailError.response);
+      console.error('Full error:', JSON.stringify(emailError, null, 2));
       throw emailError;
     }
 
