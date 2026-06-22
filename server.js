@@ -109,7 +109,7 @@ async function handlePaymentSuccess(session) {
       </div>
       <h3>Next Steps:</h3>
       <ol>
-        <li><strong>Join our Discord:</strong> <a href="https://discord.gg/your-server-link">discord.gg/strk</a></li>
+        <li><strong>Join our Discord:</strong> <a href="https://discord.gg/bHBgVEbDuz">discord.gg/bHBgVEbDuz</a></li>
         <li><strong>Claim your Premium role:</strong> Run <code>/claim-strk ${licenseKey}</code> in any channel</li>
         <li><strong>Access the loader:</strong> You'll get access to the download channel</li>
       </ol>
