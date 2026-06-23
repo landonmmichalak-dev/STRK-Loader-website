@@ -179,6 +179,18 @@ async function handlePaymentSuccess(session) {
       console.log('Email sent successfully!');
       console.log(`License key emailed to ${customerEmail}`);
 
+      // Store key in Supabase so the loader can validate it
+      const { error: dbError } = await supabase.from('cooldowns').insert({
+        discord_id: `stripe:${session.id}`,
+        license_key: licenseKey,
+        issued_at: new Date().toISOString(),
+        hwid: null,
+        hwid_bound_at: null,
+        hwid_reset_at: null,
+      });
+      if (dbError) console.error('Supabase insert error:', dbError.message);
+      else console.log(`Key stored in Supabase for session ${session.id}`);
+
       // Track issued key to prevent duplicates
       const issuedKeys = loadIssuedKeys();
       issuedKeys[session.id] = {
