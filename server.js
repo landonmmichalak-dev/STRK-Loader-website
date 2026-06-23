@@ -3,12 +3,15 @@ const crypto = require('crypto');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 const { createClient } = require('@supabase/supabase-js');
+const WebSocket = require('ws');
 require('dotenv').config();
 
 // Supabase admin client (service role — never expose this key to clients)
+// Pass ws as the WebSocket transport so this works on Node.js < 22
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY   // service_role key, NOT anon key
+  process.env.SUPABASE_SERVICE_KEY,  // service_role key, NOT anon key
+  { realtime: { transport: WebSocket } }
 );
 
 // Per-IP rate limiter for the validate-key endpoint: max 10 req / 60s
