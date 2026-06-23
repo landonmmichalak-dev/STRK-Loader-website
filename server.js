@@ -2,7 +2,46 @@ const express = require('express');
 const crypto = require('crypto');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const SibApiV3Sdk = require('sib-api-v3-sdk');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
+
+// Supabase admin client (service role — never expose this key to clients)
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY   // service_role key, NOT anon key
+);
+
+// Per-IP rate limiter for the validate-key endpoint: max 10 req / 60s
+const _rlMap = new Map();
+function checkRateLimit(ip) {
+  const now = Date.now();
+  let slot = _rlMap.get(ip);
+  if (!slot || now > slot.resetAt) slot = { count: 0, resetAt: now + 60_000 };
+  slot.count++;
+  _rlMap.set(ip, slot);
+  // Evict IPs whose window has expired to prevent unbounded growth
+  if (_rlMap.size > 5000) {
+    for (const [k, v] of _rlMap) if (now > v.resetAt) _rlMap.delete(k);
+  }
+  return slot.count <= 10;
+}
+
+// Validate a STRK-XXXXXXXX-YYYYYYYY key against the server-side HMAC secret
+function validateHmac(key) {
+  try {
+    const norm = String(key).toUpperCase().trim();
+    if (!norm.startsWith('STRK-')) return false;
+    const parts = norm.substring(5).split('-');
+    if (parts.length !== 2 || parts[0].length !== 8 || parts[1].length !== 8) return false;
+    const expected = crypto
+      .createHmac('sha256', process.env.HMAC_SECRET)
+      .update(parts[0])
+      .digest('hex')
+      .substring(0, 8)
+      .toUpperCase();
+    return parts[1] === expected;
+  } catch { return false; }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,7 +62,7 @@ function saveIssuedKeys(data) {
   require('fs').writeFileSync(ISSUED_KEYS_FILE, JSON.stringify(data, null, 2));
 }
 
-// Log environment variables on startup
+// Log environment variables on startup (no secret values)
 console.log('=== STARTUP ===');
 console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
 console.log('STRIPE_WEBHOOK_SECRET exists:', !!process.env.STRIPE_WEBHOOK_SECRET);
@@ -31,13 +70,18 @@ console.log('BREVO_API_KEY exists:', !!process.env.BREVO_API_KEY);
 console.log('BREVO_FROM_EMAIL:', process.env.BREVO_FROM_EMAIL);
 console.log('HMAC_SECRET exists:', !!process.env.HMAC_SECRET);
 console.log('HMAC_SECRET length:', process.env.HMAC_SECRET?.length || 0);
-console.log('HMAC_SECRET first 5 chars:', process.env.HMAC_SECRET?.substring(0, 5) || 'NONE');
 
 const defaultClient = SibApiV3Sdk.ApiClient.instance;
 defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
 
-// Serve static files (index.html)
-app.use(express.static('.'));
+// Serve only the landing page and its assets — never server.js, issued_keys.json, .env, etc.
+const ALLOWED_STATIC = new Set(['/', '/index.html', '/preview.png', '/preview.svg']);
+app.get('*', (req, res, next) => {
+  const p = req.path === '/' ? '/' : req.path;
+  if (!ALLOWED_STATIC.has(p)) return res.status(404).send('Not found');
+  next();
+});
+app.use(express.static('.', { index: 'index.html' }));
 
 // Raw body for Stripe webhook verification
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -159,6 +203,102 @@ async function handlePaymentSuccess(session) {
     console.error('Full error:', JSON.stringify(error, null, 2));
   }
 }
+
+// ── Key validation endpoint called by the C# loader ──────────────────────────
+// POST /api/validate-key  { key, hwid, token }
+// token must equal LOADER_API_SECRET env var (prevents unauthenticated probing)
+// On first use: binds the HWID to the key in Supabase.
+// On subsequent uses: returns valid only if HWID matches the stored binding.
+app.post('/api/validate-key', express.json(), async (req, res) => {
+  const ip = req.ip || req.socket?.remoteAddress;
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ valid: false, reason: 'rate_limited' });
+  }
+
+  const { key, hwid, token } = req.body || {};
+
+  if (!token || token !== process.env.LOADER_API_SECRET) {
+    return res.status(401).json({ valid: false, reason: 'unauthorized' });
+  }
+
+  if (!key || !hwid || typeof key !== 'string' || typeof hwid !== 'string') {
+    return res.status(400).json({ valid: false, reason: 'missing_fields' });
+  }
+
+  if (hwid.length < 8 || hwid.length > 64) {
+    return res.json({ valid: false, reason: 'invalid_hwid' });
+  }
+
+  const normalized = key.toUpperCase().trim();
+
+  if (!validateHmac(normalized)) {
+    return res.json({ valid: false, reason: 'invalid_key' });
+  }
+
+  // Check and bind HWID in Supabase cooldowns table
+  try {
+    const { data: rows, error } = await supabase
+      .from('cooldowns')
+      .select('discord_id, hwid')
+      .eq('license_key', normalized)
+      .limit(1);
+
+    if (error) throw error;
+
+    if (!rows || rows.length === 0) {
+      return res.json({ valid: false, reason: 'key_not_found' });
+    }
+
+    const row = rows[0];
+
+    if (!row.hwid) {
+      // First use — bind the HWID
+      const { error: updateError } = await supabase
+        .from('cooldowns')
+        .update({ hwid, hwid_bound_at: new Date().toISOString() })
+        .eq('license_key', normalized);
+      if (updateError) throw updateError;
+      console.log(`[validate-key] HWID bound for key ${normalized.substring(0, 10)}...`);
+      return res.json({ valid: true });
+    }
+
+    if (row.hwid !== hwid) {
+      console.log(`[validate-key] HWID mismatch for key ${normalized.substring(0, 10)}...`);
+      return res.json({ valid: false, reason: 'hwid_mismatch' });
+    }
+
+    return res.json({ valid: true });
+  } catch (err) {
+    console.error('[validate-key] Supabase error:', err.message);
+    // On DB error fall back to HMAC-only validation so users aren't locked out
+    return res.json({ valid: true, warning: 'db_unavailable' });
+  }
+});
+
+// ── HWID reset endpoint called by the Discord bot ────────────────────────────
+// POST /api/reset-hwid  { license_key, token }
+app.post('/api/reset-hwid', express.json(), async (req, res) => {
+  const { license_key, token } = req.body || {};
+
+  if (!token || token !== process.env.LOADER_API_SECRET) {
+    return res.status(401).json({ ok: false, reason: 'unauthorized' });
+  }
+  if (!license_key) return res.status(400).json({ ok: false, reason: 'missing_fields' });
+
+  try {
+    const normalized = String(license_key).toUpperCase().trim();
+    const { error } = await supabase
+      .from('cooldowns')
+      .update({ hwid: null, hwid_bound_at: null })
+      .eq('license_key', normalized);
+    if (error) throw error;
+    console.log(`[reset-hwid] HWID cleared for key ${normalized.substring(0, 10)}...`);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[reset-hwid] error:', err.message);
+    return res.status(500).json({ ok: false, reason: 'server_error' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`STRK Loader website running on port ${PORT}`);
