@@ -327,7 +327,7 @@ app.post('/api/admin/issue-key', express.json(), async (req, res) => {
   try {
     const { error } = await supabase.from('cooldowns').insert({
       license_key: key,
-      discord_id: email || 'admin-issued',
+      discord_id: email || ('admin-issued-' + Date.now()),
       hwid: null,
       hwid_bound_at: null,
     });
