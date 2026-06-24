@@ -34,8 +34,6 @@
             height: 100%;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-color: var(--navy-darkest);
-            background-image: radial-gradient(circle, rgba(74, 158, 255, 0.18) 1px, transparent 1px);
-            background-size: 28px 28px;
             color: var(--text);
             overflow-x: hidden;
         }
@@ -234,6 +232,80 @@
         .secure-note svg {
             opacity: 0.6;
         }
+
+        /* ── Mod list toggle ── */
+        .mod-list-toggle {
+            margin-top: 28px;
+            width: 100%;
+            background: none;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: var(--text-dim);
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
+        }
+
+        .mod-list-toggle:hover {
+            border-color: rgba(74,158,255,0.45);
+            color: var(--text);
+            background: rgba(74,158,255,0.06);
+        }
+
+        .mod-list-toggle .arrow {
+            display: inline-block;
+            transition: transform 0.25s;
+            font-size: 11px;
+        }
+
+        .mod-list-toggle.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .mod-list-body {
+            display: none;
+            margin-top: 16px;
+            text-align: left;
+        }
+
+        .mod-list-body.open {
+            display: block;
+        }
+
+        .mod-cat {
+            margin-bottom: 14px;
+        }
+
+        .mod-cat-name {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
+        .mod-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .mod-tag {
+            font-size: 11px;
+            color: var(--text-dim);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 5px;
+            padding: 3px 8px;
+        }
     </style>
 </head>
 <body>
@@ -274,8 +346,162 @@
             </svg>
             Secured by Stripe &nbsp;·&nbsp; Apple Pay &amp; Google Pay accepted
         </div>
+
+        <button class="mod-list-toggle" id="modToggle" onclick="toggleModList()">
+            View all included mods <span class="arrow">▼</span>
+        </button>
+
+        <div class="mod-list-body" id="modListBody">
+            <div class="mod-cat">
+                <div class="mod-cat-name">Settings</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Select Item</span>
+                    <span class="mod-tag">Menu Scale</span>
+                    <span class="mod-tag">Toggle Fullscreen</span>
+                    <span class="mod-tag">Page Buttons</span>
+                    <span class="mod-tag">Notification Size</span>
+                    <span class="mod-tag">Notification Time</span>
+                    <span class="mod-tag">Stash Dupe</span>
+                    <span class="mod-tag">Stash Dupe Amount</span>
+                    <span class="mod-tag">Arena Items Auto</span>
+                    <span class="mod-tag">Toggle Outline</span>
+                    <span class="mod-tag">Outline Color</span>
+                    <span class="mod-tag">Player Panel</span>
+                    <span class="mod-tag">Selected Item Minigun</span>
+                    <span class="mod-tag">Minigun Item Size</span>
+                    <span class="mod-tag">Selected Item Random Launcher</span>
+                    <span class="mod-tag">Selected Item Random Size Launcher</span>
+                    <span class="mod-tag">Giveaway Bag Minigun</span>
+                    <span class="mod-tag">Spawn Items</span>
+                    <span class="mod-tag">Goop Fish Gun</span>
+                    <span class="mod-tag">Spawn Gun</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Spawn Mods</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Spawn Mob</span>
+                    <span class="mod-tag">Spawn Mob at Hand</span>
+                    <span class="mod-tag">Mob Spawner Gun</span>
+                    <span class="mod-tag">Kill All Mobs</span>
+                    <span class="mod-tag">Delete All Monsters</span>
+                    <span class="mod-tag">Rocket Fist</span>
+                    <span class="mod-tag">Boomspear Fist</span>
+                    <span class="mod-tag">Egg Fist</span>
+                    <span class="mod-tag">Robot Dog RPG Fist</span>
+                    <span class="mod-tag">Grenade Projectile Launcher</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Local Player</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Scale +/−</span>
+                    <span class="mod-tag">Fullbright</span>
+                    <span class="mod-tag">Night Mode</span>
+                    <span class="mod-tag">Custom Hue</span>
+                    <span class="mod-tag">Custom Saturation</span>
+                    <span class="mod-tag">Custom Scale</span>
+                    <span class="mod-tag">Dev Mode</span>
+                    <span class="mod-tag">Own All Avatar Items</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Weapon Mods</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Infinite Ammo</span>
+                    <span class="mod-tag">No Recoil</span>
+                    <span class="mod-tag">No Weapon Cooldown</span>
+                    <span class="mod-tag">Rapid Fire V2</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Movement</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Noclip</span>
+                    <span class="mod-tag">Fly</span>
+                    <span class="mod-tag">Change Fly Speed</span>
+                    <span class="mod-tag">Long Arms</span>
+                    <span class="mod-tag">Platforms</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Prefabs</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Spawn Prefab at Hand</span>
+                    <span class="mod-tag">Prefab Gun</span>
+                    <span class="mod-tag">Spawn InflatedBalloon</span>
+                    <span class="mod-tag">Spawn InflatedHeartBalloon</span>
+                    <span class="mod-tag">Trap Player</span>
+                    <span class="mod-tag">Dyson Sphere Christmas Boxes</span>
+                    <span class="mod-tag">Spiral Christmas Boxes</span>
+                    <span class="mod-tag">Spiral Selling Machines</span>
+                    <span class="mod-tag">Christmas Box Orbit</span>
+                    <span class="mod-tag">Christmas Box Chain</span>
+                    <span class="mod-tag">ChristmasBox Dome</span>
+                    <span class="mod-tag">Selling Machine Orbit</span>
+                    <span class="mod-tag">Floating Selling Machine</span>
+                    <span class="mod-tag">Floating Christmas Box</span>
+                    <span class="mod-tag">Custom Prefab Orbit</span>
+                    <span class="mod-tag">ChristmasBox Hand Follow</span>
+                    <span class="mod-tag">Spawn ThunderController</span>
+                    <span class="mod-tag">Lightning Burst Gun</span>
+                    <span class="mod-tag">Vehicle Buggy Hand Follow</span>
+                    <span class="mod-tag">Selling Machine Hand Follow</span>
+                    <span class="mod-tag">GiantRock Hand Follow</span>
+                    <span class="mod-tag">Delete ALL Prefabs</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Other</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Custom Hue Held Item</span>
+                    <span class="mod-tag">Custom Saturation Held Item</span>
+                    <span class="mod-tag">Custom Scale Held Item</span>
+                    <span class="mod-tag">Randomize Held Item</span>
+                    <span class="mod-tag">Delete ALL Items</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Teleport</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Teleport Gun</span>
+                    <span class="mod-tag">Teleport All Gun</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Guns</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Kill Gun</span>
+                    <span class="mod-tag">Claim Master Client</span>
+                    <span class="mod-tag">Fling Gun</span>
+                    <span class="mod-tag">Color Gun</span>
+                    <span class="mod-tag">Spaz Color Gun</span>
+                    <span class="mod-tag">Telekinesis Gun</span>
+                    <span class="mod-tag">Nut Pickup Gun</span>
+                    <span class="mod-tag">Pickup Gun</span>
+                    <span class="mod-tag">Ammo Pickup Gun</span>
+                    <span class="mod-tag">VFX Gun</span>
+                    <span class="mod-tag">SFX Gun</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Themes</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">40+ color themes</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+function toggleModList() {
+    const btn = document.getElementById('modToggle');
+    const body = document.getElementById('modListBody');
+    btn.classList.toggle('open');
+    body.classList.toggle('open');
+}
+</script>
 
 <script>
 // ── Nebula effect background ──────────────────────────────────────────────
@@ -283,60 +509,62 @@
     const canvas = document.getElementById('canvas');
     const ctx    = canvas.getContext('2d');
 
-    let W, H, time = 0;
+    var W, H, particles = [];
+    var DOT_COLOR = '74,158,255';
+    var LINK_DIST = 140;
+    var COUNT = 70;
 
     function resize() {
         W = canvas.width  = window.innerWidth;
         H = canvas.height = window.innerHeight;
     }
 
-    function drawNebula() {
-        // Create multiple radial gradients for nebula clouds
-        const centerX = W / 2 + Math.sin(time * 0.001) * W * 0.3;
-        const centerY = H / 2 + Math.cos(time * 0.0008) * H * 0.2;
-
-        // Layer 1: Blue base
-        let grad1 = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, W * 0.8);
-        grad1.addColorStop(0, 'rgba(100, 150, 255, 0.4)');
-        grad1.addColorStop(0.5, 'rgba(40, 80, 150, 0.2)');
-        grad1.addColorStop(1, 'rgba(5, 8, 16, 0)');
-        ctx.fillStyle = grad1;
-        ctx.fillRect(0, 0, W, H);
-
-        // Layer 2: Purple accent (offset)
-        const centerX2 = W / 2 + Math.sin(time * 0.0012 + Math.PI) * W * 0.2;
-        const centerY2 = H / 2 + Math.cos(time * 0.0015 + Math.PI) * H * 0.3;
-        let grad2 = ctx.createRadialGradient(centerX2, centerY2, 0, centerX2, centerY2, W * 0.7);
-        grad2.addColorStop(0, 'rgba(150, 100, 200, 0.3)');
-        grad2.addColorStop(0.5, 'rgba(80, 40, 120, 0.15)');
-        grad2.addColorStop(1, 'rgba(5, 8, 16, 0)');
-        ctx.fillStyle = grad2;
-        ctx.fillRect(0, 0, W, H);
-
-        // Layer 3: Cyan accent
-        const centerX3 = W / 2 + Math.sin(time * 0.001 + Math.PI * 0.5) * W * 0.25;
-        const centerY3 = H / 2 + Math.cos(time * 0.0013 + Math.PI * 0.5) * H * 0.25;
-        let grad3 = ctx.createRadialGradient(centerX3, centerY3, 0, centerX3, centerY3, W * 0.6);
-        grad3.addColorStop(0, 'rgba(74, 158, 255, 0.25)');
-        grad3.addColorStop(0.6, 'rgba(30, 80, 150, 0.1)');
-        grad3.addColorStop(1, 'rgba(5, 8, 16, 0)');
-        ctx.fillStyle = grad3;
-        ctx.fillRect(0, 0, W, H);
+    function makeParticle() {
+        return {
+            x:  Math.random() * W,
+            y:  Math.random() * H,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5,
+            r:  Math.random() * 1.5 + 1
+        };
     }
 
-    function draw() {
-        ctx.fillStyle = 'rgba(5, 8, 16, 0.05)';
-        ctx.fillRect(0, 0, W, H);
-
-        drawNebula();
-
-        time += 1;
-        requestAnimationFrame(draw);
+    function tick() {
+        requestAnimationFrame(tick);
+        ctx.clearRect(0, 0, W, H);
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = W; else if (p.x > W) p.x = 0;
+            if (p.y < 0) p.y = H; else if (p.y > H) p.y = 0;
+        }
+        for (var i = 0; i < particles.length; i++) {
+            for (var j = i + 1; j < particles.length; j++) {
+                var dx = particles[i].x - particles[j].x;
+                var dy = particles[i].y - particles[j].y;
+                var d  = Math.sqrt(dx*dx + dy*dy);
+                if (d < LINK_DIST) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = 'rgba('+DOT_COLOR+','+(0.28*(1-d/LINK_DIST)).toFixed(3)+')';
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                }
+            }
+        }
+        for (var i = 0; i < particles.length; i++) {
+            ctx.beginPath();
+            ctx.arc(particles[i].x, particles[i].y, particles[i].r, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba('+DOT_COLOR+',0.7)';
+            ctx.fill();
+        }
     }
 
-    window.addEventListener('resize', () => { resize(); });
     resize();
-    draw();
+    window.addEventListener('resize', resize);
+    for (var i = 0; i < COUNT; i++) particles.push(makeParticle());
+    tick();
 })();
 </script>
 
