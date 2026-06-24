@@ -136,6 +136,14 @@
             gap: 10px;
             font-size: 14px;
             color: var(--text-dim);
+            opacity: 0;
+            transform: translateX(-18px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+
+        .features li.visible {
+            opacity: 1;
+            transform: translateX(0);
         }
 
         .features li::before {
@@ -559,6 +567,13 @@ function toggleModList() {
     window.addEventListener('resize', resize);
     for (var i = 0; i < COUNT; i++) particles.push(makeParticle());
     tick();
+})();
+
+(function() {
+    var items = document.querySelectorAll('.features li');
+    items.forEach(function(el, i) {
+        setTimeout(function() { el.classList.add('visible'); }, 120 + i * 110);
+    });
 })();
 </script>
 
