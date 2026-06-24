@@ -315,6 +315,31 @@ app.post('/api/reset-hwid', express.json(), async (req, res) => {
   }
 });
 
+// ── Admin: issue a key directly (bypasses Stripe/email flow) ────────────────
+// POST /api/admin/issue-key  { token, email? }
+// Returns the generated key and inserts it into Supabase.
+app.post('/api/admin/issue-key', express.json(), async (req, res) => {
+  const { token, email } = req.body || {};
+  if (!token || token !== process.env.LOADER_API_SECRET) {
+    return res.status(401).json({ ok: false, reason: 'unauthorized' });
+  }
+  const key = generateLicenseKey();
+  try {
+    const { error } = await supabase.from('cooldowns').insert({
+      license_key: key,
+      discord_id: email || 'admin-issued',
+      hwid: null,
+      hwid_bound_at: null,
+    });
+    if (error) throw error;
+    console.log(`[admin/issue-key] Issued key ${key.substring(0, 14)}... for ${email || 'admin'}`);
+    return res.json({ ok: true, key });
+  } catch (err) {
+    console.error('[admin/issue-key] error:', err.message);
+    return res.status(500).json({ ok: false, reason: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`STRK Loader website running on port ${PORT}`);
 });
