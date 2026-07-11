@@ -340,6 +340,82 @@ app.post('/api/admin/issue-key', express.json(), async (req, res) => {
   }
 });
 
+// ── Discord OAuth proxy — keeps client_secret server-side ────────────────────
+// The C# loader sends the auth code here; we exchange it with Discord using
+// the stored secret. The client binary never contains the client_secret.
+// Both endpoints require DISCORD_PROXY_SECRET to prevent unauthenticated use.
+
+const _discordRl = new Map();
+function checkDiscordRateLimit(ip) {
+  const now = Date.now();
+  let slot = _discordRl.get(ip);
+  if (!slot || now > slot.resetAt) slot = { count: 0, resetAt: now + 60_000 };
+  slot.count++;
+  _discordRl.set(ip, slot);
+  return slot.count <= 5;
+}
+
+app.post('/api/discord/exchange', express.json(), async (req, res) => {
+  const ip = req.ip || req.socket?.remoteAddress;
+  if (!checkDiscordRateLimit(ip)) return res.status(429).json({ error: 'rate_limited' });
+  const { code, redirect_uri, token } = req.body || {};
+  if (!token || token !== process.env.DISCORD_PROXY_SECRET)
+    return res.status(401).json({ error: 'unauthorized' });
+  if (!code || !redirect_uri)
+    return res.status(400).json({ error: 'missing_fields' });
+  if (!redirect_uri.startsWith('http://localhost:'))
+    return res.status(400).json({ error: 'invalid_redirect' });
+  try {
+    const params = new URLSearchParams({
+      client_id:     process.env.DISCORD_CLIENT_ID,
+      client_secret: process.env.DISCORD_CLIENT_SECRET,
+      grant_type:    'authorization_code',
+      code,
+      redirect_uri,
+    });
+    const r = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+    const data = await r.json();
+    if (!r.ok) return res.status(r.status).json(data);
+    res.json(data);
+  } catch (err) {
+    console.error('[discord/exchange] error:', err.message);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
+app.post('/api/discord/refresh', express.json(), async (req, res) => {
+  const ip = req.ip || req.socket?.remoteAddress;
+  if (!checkDiscordRateLimit(ip)) return res.status(429).json({ error: 'rate_limited' });
+  const { refresh_token, token } = req.body || {};
+  if (!token || token !== process.env.DISCORD_PROXY_SECRET)
+    return res.status(401).json({ error: 'unauthorized' });
+  if (!refresh_token)
+    return res.status(400).json({ error: 'missing_fields' });
+  try {
+    const params = new URLSearchParams({
+      client_id:     process.env.DISCORD_CLIENT_ID,
+      client_secret: process.env.DISCORD_CLIENT_SECRET,
+      grant_type:    'refresh_token',
+      refresh_token,
+    });
+    const r = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+    const data = await r.json();
+    if (!r.ok) return res.status(r.status).json(data);
+    res.json(data);
+  } catch (err) {
+    console.error('[discord/refresh] error:', err.message);
+    res.status(500).json({ error: 'server_error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`STRK Loader website running on port ${PORT}`);
 });
