@@ -17,25 +17,38 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --navy-darkest: #050810;
-            --navy-dark:    #0a0f1e;
-            --navy-mid:     #0f1a35;
-            --navy-light:   #162040;
-            --accent:       #4a9eff;
-            --accent-glow:  #4a9eff55;
-            --accent-dim:   #1a6fc4;
-            --text:         #e8f0ff;
-            --text-dim:     #8ca0c8;
-            --card-bg:      rgba(10, 18, 40, 0.75);
-            --card-border:  rgba(74, 158, 255, 0.18);
+            --navy-darkest: #0a0614;
+            --navy-dark:    #120a1f;
+            --navy-mid:     #1c1030;
+            --navy-light:   #281845;
+            --accent:       #9b5de5;
+            --accent-glow:  #9b5de555;
+            --accent-dim:   #6a2fb5;
+            --text:         #ede6ff;
+            --text-dim:     #a894c9;
+            --card-bg:      rgba(24, 12, 40, 0.75);
+            --card-border:  rgba(155, 93, 229, 0.20);
         }
 
         html, body {
             height: 100%;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-color: var(--navy-darkest);
+            background-image:
+                radial-gradient(ellipse 60% 50% at 20% 25%, rgba(155, 93, 229, 0.35), transparent 60%),
+                radial-gradient(ellipse 55% 45% at 80% 20%, rgba(123, 47, 255, 0.28), transparent 60%),
+                radial-gradient(ellipse 65% 55% at 50% 90%, rgba(199, 125, 255, 0.22), transparent 60%);
+            background-size: 180% 180%;
+            background-position: 0% 0%, 100% 0%, 50% 100%;
+            animation: purpleDrift 22s ease-in-out infinite;
             color: var(--text);
             overflow-x: hidden;
+        }
+
+        @keyframes purpleDrift {
+            0%   { background-position: 0% 0%,   100% 0%,  50% 100%; }
+            50%  { background-position: 100% 60%, 10% 90%, 20% 30%; }
+            100% { background-position: 0% 0%,   100% 0%,  50% 100%; }
         }
 
         /* ── Connecting-dots canvas ── */
@@ -69,15 +82,15 @@
             box-shadow:
                 0 0 0 1px var(--card-border),
                 0 8px 60px rgba(0, 0, 0, 0.6),
-                0 0 80px rgba(74, 158, 255, 0.06);
+                0 0 80px rgba(155, 93, 229, 0.06);
             text-align: center;
         }
 
         /* ── Badge ── */
         .badge {
             display: inline-block;
-            background: rgba(74, 158, 255, 0.12);
-            border: 1px solid rgba(74, 158, 255, 0.3);
+            background: rgba(155, 93, 229, 0.12);
+            border: 1px solid rgba(155, 93, 229, 0.3);
             color: var(--accent);
             font-size: 11px;
             font-weight: 700;
@@ -152,10 +165,10 @@
             width: 18px;
             height: 18px;
             min-width: 18px;
-            background: rgba(74, 158, 255, 0.15);
-            border: 1px solid rgba(74, 158, 255, 0.4);
+            background: rgba(155, 93, 229, 0.15);
+            border: 1px solid rgba(155, 93, 229, 0.4);
             border-radius: 50%;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%234a9eff' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%239b5de5' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: center;
         }
@@ -202,7 +215,7 @@
             border: none;
             cursor: pointer;
             transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
-            box-shadow: 0 4px 24px rgba(74, 158, 255, 0.35);
+            box-shadow: 0 4px 24px rgba(155, 93, 229, 0.35);
             position: relative;
             overflow: hidden;
         }
@@ -218,7 +231,7 @@
         .btn-buy:hover {
             filter: brightness(1.12);
             transform: translateY(-1px);
-            box-shadow: 0 8px 32px rgba(74, 158, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(155, 93, 229, 0.5);
         }
 
         .btn-buy:active {
@@ -262,9 +275,9 @@
         }
 
         .mod-list-toggle:hover {
-            border-color: rgba(74,158,255,0.45);
+            border-color: rgba(155,93,229,0.45);
             color: var(--text);
-            background: rgba(74,158,255,0.06);
+            background: rgba(155,93,229,0.06);
         }
 
         .mod-list-toggle .arrow {
@@ -361,115 +374,161 @@
 
         <div class="mod-list-body" id="modListBody">
             <div class="mod-cat">
-                <div class="mod-cat-name">Settings</div>
+                <div class="mod-cat-name">Self</div>
                 <div class="mod-tags">
-                    <span class="mod-tag">Select Item</span>
-                    <span class="mod-tag">Menu Scale +/−</span>
-                    <span class="mod-tag">Toggle Fullscreen</span>
-                    <span class="mod-tag">Page Buttons +/−</span>
-                    <span class="mod-tag">Notification Size +/−</span>
-                    <span class="mod-tag">Notification Time +/−</span>
-                    <span class="mod-tag">Stash Dupe</span>
-                    <span class="mod-tag">Stash Dupe Amount</span>
-                    <span class="mod-tag">Backpack Dupe</span>
-                    <span class="mod-tag">Duplicate Own Rig</span>
-                    <span class="mod-tag">Arena Items Auto</span>
-                    <span class="mod-tag">Toggle Outline</span>
-                    <span class="mod-tag">Outline Color</span>
+                    <span class="mod-tag">Fly (adjustable speed)</span>
+                    <span class="mod-tag">Joystick Fly</span>
+                    <span class="mod-tag">Hand Platforms</span>
+                    <span class="mod-tag">Infinite Double Jump</span>
+                    <span class="mod-tag">Any Item Backpacks</span>
+                    <span class="mod-tag">Dev Mode</span>
+                    <span class="mod-tag">Fullbright</span>
+                    <span class="mod-tag">Night Mode</span>
+                    <span class="mod-tag">Force Day Time</span>
+                    <span class="mod-tag">Force Night Time</span>
+                    <span class="mod-tag">Player ESP</span>
+                    <span class="mod-tag">Custom Hue Held Item</span>
+                    <span class="mod-tag">Custom Saturation Held Item</span>
+                    <span class="mod-tag">Custom Scale Held Item</span>
                 </div>
             </div>
             <div class="mod-cat">
-                <div class="mod-cat-name">Main</div>
+                <div class="mod-cat-name">Target Guns</div>
                 <div class="mod-tags">
-                    <span class="mod-tag">Spawn Items</span>
+                    <span class="mod-tag">Kill Gun</span>
+                    <span class="mod-tag">Fling Gun</span>
+                    <span class="mod-tag">Kick Gun</span>
+                    <span class="mod-tag">Ban Gun</span>
+                    <span class="mod-tag">Color Gun</span>
+                    <span class="mod-tag">Spaz Color Gun</span>
+                    <span class="mod-tag">Teleport All Gun</span>
+                    <span class="mod-tag">Telekinesis Gun</span>
+                    <span class="mod-tag">Orbit Players</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Item Spawner</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Spawn Gun (Item ID select)</span>
+                    <span class="mod-tag">Spawn Mob Gun (Mob ID select)</span>
+                    <span class="mod-tag">Prefab Gun (Prefab ID select)</span>
                     <span class="mod-tag">Goop Fish Gun</span>
-                    <span class="mod-tag">Spawn Gun</span>
                     <span class="mod-tag">Selected Item Minigun</span>
                     <span class="mod-tag">Selected Item Random Launcher</span>
                     <span class="mod-tag">Selected Item Random Size Launcher</span>
                     <span class="mod-tag">Giveaway Bag Minigun</span>
-                    <span class="mod-tag">Spawn Mob</span>
-                    <span class="mod-tag">Spawn Mob at Hand</span>
-                    <span class="mod-tag">Mob Spawner Gun</span>
-                    <span class="mod-tag">Kill All Mobs</span>
+                    <span class="mod-tag">Spawn Interval</span>
+                    <span class="mod-tag">Item Gun Size</span>
+                    <span class="mod-tag">UFO Spawner Gun</span>
+                    <span class="mod-tag">Ship Spawner Gun</span>
+                    <span class="mod-tag">Force Spawned Mobs Stay</span>
+                    <span class="mod-tag">No Mob Despawn</span>
+                    <span class="mod-tag">Delete ALL Prefabs</span>
+                    <span class="mod-tag">Delete ALL Items</span>
                     <span class="mod-tag">Delete All Monsters</span>
+                    <span class="mod-tag">Grenade Projectile Launcher</span>
+                    <span class="mod-tag">Nut Pickup Gun</span>
+                    <span class="mod-tag">Ammo Pickup Gun</span>
+                    <span class="mod-tag">Unreleased Item Protect</span>
+                    <span class="mod-tag">Stash Dupe (adjustable amount)</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Weapons</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">No Recoil</span>
+                    <span class="mod-tag">Rapid Fire V2</span>
+                    <span class="mod-tag">Infinite Ammo</span>
+                    <span class="mod-tag">Infinite Flare Ammo</span>
+                    <span class="mod-tag">Auto Cock Revolver</span>
+                    <span class="mod-tag">Shotgun No Cooldown</span>
+                    <span class="mod-tag">Universal Quiver</span>
+                    <span class="mod-tag">Free Item Hold</span>
+                    <span class="mod-tag">Activation Gun</span>
+                    <span class="mod-tag">Mining Laser God</span>
+                    <span class="mod-tag">Break All Ores</span>
                     <span class="mod-tag">Rocket Fist</span>
                     <span class="mod-tag">Boomspear Fist</span>
                     <span class="mod-tag">Egg Fist</span>
                     <span class="mod-tag">Robot Dog RPG Fist</span>
-                    <span class="mod-tag">Grenade Projectile Launcher</span>
                 </div>
             </div>
             <div class="mod-cat">
-                <div class="mod-cat-name">Local Player</div>
+                <div class="mod-cat-name">Anti-RPC</div>
                 <div class="mod-tags">
-                    <span class="mod-tag">Scale +/−</span>
-                    <span class="mod-tag">Scale Reset</span>
-                    <span class="mod-tag">Fullbright</span>
-                    <span class="mod-tag">Night Mode</span>
-                    <span class="mod-tag">Invisibility</span>
-                    <span class="mod-tag">Fly</span>
-                    <span class="mod-tag">Change Fly Speed</span>
-                    <span class="mod-tag">Infinite Double Jump</span>
-                    <span class="mod-tag">Own All Avatar Items</span>
-                    <span class="mod-tag">Dev Mode</span>
+                    <span class="mod-tag">Block All / Allow All</span>
+                    <span class="mod-tag">23 individual RPC blockers (damage, kill, teleport, stun, kick, ban, color, buffs &amp; more)</span>
                 </div>
             </div>
             <div class="mod-cat">
-                <div class="mod-cat-name">Weapon Mods</div>
+                <div class="mod-cat-name">Mass FX</div>
                 <div class="mod-tags">
-                    <span class="mod-tag">Infinite Ammo</span>
-                    <span class="mod-tag">Infinite Flare Gun Ammo</span>
-                    <span class="mod-tag">Universal Quiver/Launcher</span>
-                    <span class="mod-tag">Activation Gun</span>
-                    <span class="mod-tag">No Recoil</span>
-                    <span class="mod-tag">Auto Cock Revolver</span>
-                    <span class="mod-tag">Shotgun No Cooldown</span>
-                    <span class="mod-tag">Rapid Fire V2</span>
-                    <span class="mod-tag">Free Item Hold</span>
-                </div>
-            </div>
-            <div class="mod-cat">
-                <div class="mod-cat-name">Prefabs</div>
-                <div class="mod-tags">
-                    <span class="mod-tag">Spawn Selected Prefab at Hand</span>
-                    <span class="mod-tag">Prefab Gun</span>
-                    <span class="mod-tag">Prefab +/−</span>
-                    <span class="mod-tag">Prefab Size</span>
-                    <span class="mod-tag">Orbit Players</span>
-                    <span class="mod-tag">Delete ALL Prefabs</span>
-                </div>
-            </div>
-            <div class="mod-cat">
-                <div class="mod-cat-name">Other</div>
-                <div class="mod-tags">
-                    <span class="mod-tag">Custom Hue Held Item</span>
-                    <span class="mod-tag">Custom Saturation Held Item</span>
-                    <span class="mod-tag">Custom Scale Held Item</span>
-                    <span class="mod-tag">Randomize Held Item</span>
-                </div>
-            </div>
-            <div class="mod-cat">
-                <div class="mod-cat-name">Gun Mods</div>
-                <div class="mod-tags">
-                    <span class="mod-tag">Kill Gun</span>
-                    <span class="mod-tag">Claim Master Client</span>
-                    <span class="mod-tag">Fling Gun</span>
-                    <span class="mod-tag">Color Gun</span>
-                    <span class="mod-tag">Spaz Color Gun</span>
-                    <span class="mod-tag">Copy Identity Gun</span>
-                    <span class="mod-tag">Telekinesis Gun</span>
-                    <span class="mod-tag">Nut Pickup Gun</span>
-                    <span class="mod-tag">Pickup Gun</span>
-                    <span class="mod-tag">Ammo Pickup Gun</span>
+                    <span class="mod-tag">Spam Rainbow All</span>
+                    <span class="mod-tag">Jelly Everyone</span>
+                    <span class="mod-tag">Stinky Everyone</span>
+                    <span class="mod-tag">Crash All</span>
+                    <span class="mod-tag">Screen Shake Everyone</span>
+                    <span class="mod-tag">Radioactive Everyone</span>
+                    <span class="mod-tag">Rainbow All Players</span>
+                    <span class="mod-tag">Kick All</span>
+                    <span class="mod-tag">Fling All</span>
+                    <span class="mod-tag">Thunder Controller</span>
+                    <span class="mod-tag">Lightning Burst Gun</span>
+                    <span class="mod-tag">Barrel Explosion Gun</span>
+                    <span class="mod-tag">Oil Spill Gun</span>
+                    <span class="mod-tag">All VFX Gun</span>
+                    <span class="mod-tag">All VFX At Hand</span>
+                    <span class="mod-tag">All VFX+SFX Gun</span>
+                    <span class="mod-tag">All SFX Gun</span>
                     <span class="mod-tag">VFX Gun</span>
                     <span class="mod-tag">SFX Gun</span>
+                    <span class="mod-tag">Earn VFX Gun</span>
+                    <span class="mod-tag">Coin Explosion Gun</span>
+                    <span class="mod-tag">Party Gun</span>
                 </div>
             </div>
             <div class="mod-cat">
-                <div class="mod-cat-name">Themes</div>
+                <div class="mod-cat-name">Import</div>
                 <div class="mod-tags">
-                    <span class="mod-tag">40+ color themes</span>
+                    <span class="mod-tag">Asset Bundle Gun</span>
+                    <span class="mod-tag">Blueprint Import (from JSON)</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Multiplayer</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Join by Room Code</span>
+                    <span class="mod-tag">Join Random (PVP)</span>
+                    <span class="mod-tag">Join Random (No PVP)</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Search</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Universal search across Items, Mobs, VFX, SFX, Earn VFX, Prefabs, UFOs &amp; Ships</span>
+                </div>
+            </div>
+            <div class="mod-cat">
+                <div class="mod-cat-name">Settings</div>
+                <div class="mod-tags">
+                    <span class="mod-tag">Menu Width / Height</span>
+                    <span class="mod-tag">VR Panel Position (pitch, offset, distance)</span>
+                    <span class="mod-tag">Menu Alpha &amp; Scale</span>
+                    <span class="mod-tag">Joystick Scroll Speed</span>
+                    <span class="mod-tag">Cursor Size &amp; DPI</span>
+                    <span class="mod-tag">UI Rounding</span>
+                    <span class="mod-tag">Background Opacity</span>
+                    <span class="mod-tag">Font Scale &amp; Font Picker</span>
+                    <span class="mod-tag">Animated Background (nodes, gradient, wave, scanline)</span>
+                    <span class="mod-tag">Button Sound Picker</span>
+                    <span class="mod-tag">Menu Open/Close Animation (Fade, Slide, Pop, Book)</span>
+                    <span class="mod-tag">Menu Open/Close Sound</span>
+                    <span class="mod-tag">Grid Mods View</span>
+                    <span class="mod-tag">Compact Spacing</span>
+                    <span class="mod-tag">3D Laser Beam</span>
+                    <span class="mod-tag">Sidebar Categories</span>
+                    <span class="mod-tag">Light / Dark Theme</span>
+                    <span class="mod-tag">Favorites &amp; Search</span>
                 </div>
             </div>
         </div>
@@ -492,7 +551,7 @@ function toggleModList() {
     const ctx    = canvas.getContext('2d');
 
     var W, H, particles = [];
-    var DOT_COLOR = '74,158,255';
+    var DOT_COLOR = '155,93,229';
     var LINK_DIST = 140;
     var COUNT = 70;
 
