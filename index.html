@@ -254,6 +254,22 @@
             opacity: 0.6;
         }
 
+        /* ── Donate link ── */
+        .donate-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 14px;
+            font-size: 12px;
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .donate-link:hover {
+            color: var(--accent);
+        }
+
         /* ── Mod list toggle ── */
         .mod-list-toggle {
             margin-top: 28px;
@@ -367,6 +383,10 @@
             </svg>
             Secured by Stripe &nbsp;·&nbsp; Apple Pay &amp; Google Pay accepted
         </div>
+
+        <a class="donate-link" href="https://buy.stripe.com/5kQ14pctObD2c492PE4gg04" target="_blank" rel="noopener">
+            &#10084;&nbsp; Support the project
+        </a>
 
         <button class="mod-list-toggle" id="modToggle" onclick="toggleModList()">
             View all included mods <span class="arrow">▼</span>
