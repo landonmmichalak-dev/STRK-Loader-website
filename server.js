@@ -368,6 +368,124 @@ app.post('/api/discord/refresh', express.json(), async (req, res) => {
   }
 });
 
+// ── Server-authoritative Discord verification + HWID ban list ────────────────
+// The loader used to call discord.com directly with the user's own token and
+// trust the JSON that came back — a local hosts-file redirect (or a fake
+// proxy in front of discord.com) could forge that response entirely, which
+// is how someone got in as a blank "User" with no real profile. This moves
+// the actual authorization decision here: we look the user up ourselves with
+// our own bot token, over our own network path, so a client-side spoof of
+// discord.com has no effect on what this endpoint decides.
+//
+// Requires a new Supabase table (run once in the Supabase SQL editor):
+//
+//   create table hwid_bans (
+//     hwid text primary key,
+//     reason text,
+//     banned_at timestamptz not null default now()
+//   );
+//
+// And a new env var: DISCORD_BOT_TOKEN — a bot token for a bot that's a
+// member of DISCORD_GUILD_ID with permission to read guild members (needs
+// the "Server Members Intent" enabled in the Discord Developer Portal).
+
+app.post('/api/discord/verify', express.json(), async (req, res) => {
+  const ip = req.ip || req.socket?.remoteAddress;
+  if (!checkDiscordRateLimit(ip)) return res.status(429).json({ valid: false, reason: 'rate_limited' });
+
+  const { access_token, hwid, token } = req.body || {};
+  if (!token || token !== process.env.DISCORD_PROXY_SECRET)
+    return res.status(401).json({ valid: false, reason: 'unauthorized' });
+  if (!access_token || !hwid || typeof access_token !== 'string' || typeof hwid !== 'string')
+    return res.status(400).json({ valid: false, reason: 'missing_fields' });
+  if (hwid.length < 8 || hwid.length > 128)
+    return res.json({ valid: false, reason: 'invalid_hwid' });
+
+  // Check the HWID ban list before doing anything else with Discord.
+  try {
+    const { data: banRows, error: banError } = await supabase
+      .from('hwid_bans')
+      .select('reason')
+      .eq('hwid', hwid)
+      .limit(1);
+    if (banError) throw banError;
+    if (banRows && banRows.length > 0) {
+      return res.json({ valid: false, banned: true, reason: banRows[0].reason || 'banned' });
+    }
+  } catch (err) {
+    console.error('[discord/verify] ban lookup error:', err.message);
+    // Fail closed on the ban check specifically — if we can't confirm this
+    // HWID *isn't* banned, don't grant access.
+    return res.status(500).json({ valid: false, reason: 'server_error' });
+  }
+
+  // Fetch the user's own profile with their token (fine — this is just
+  // display data, not the authorization decision).
+  let discordUser;
+  try {
+    const r = await fetch('https://discord.com/api/v10/users/@me', {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+    if (!r.ok) return res.json({ valid: false, reason: 'invalid_token' });
+    discordUser = await r.json();
+  } catch (err) {
+    console.error('[discord/verify] user lookup error:', err.message);
+    return res.status(500).json({ valid: false, reason: 'server_error' });
+  }
+
+  if (!discordUser || !discordUser.id) {
+    return res.json({ valid: false, reason: 'no_profile' });
+  }
+
+  // The authoritative role check — uses OUR bot token against Discord's
+  // guild-member-by-id endpoint, not the user's own OAuth-scoped token, so
+  // it can't be influenced by anything the client controls.
+  let premium = false;
+  try {
+    const mr = await fetch(
+      `https://discord.com/api/v10/guilds/${process.env.DISCORD_GUILD_ID}/members/${discordUser.id}`,
+      { headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` } }
+    );
+    if (mr.ok) {
+      const memberData = await mr.json();
+      premium = Array.isArray(memberData.roles) && memberData.roles.includes(process.env.DISCORD_PREMIUM_ROLE);
+    } else if (mr.status !== 404) {
+      console.error('[discord/verify] bot member lookup failed, status:', mr.status);
+    }
+  } catch (err) {
+    console.error('[discord/verify] bot member lookup error:', err.message);
+  }
+
+  res.json({
+    valid: true,
+    banned: false,
+    premium,
+    id: discordUser.id,
+    username: discordUser.username || discordUser.global_name || '',
+    avatar: discordUser.avatar || '',
+  });
+});
+
+app.post('/api/hwid/ban', express.json(), async (req, res) => {
+  const { hwid, reason, token } = req.body || {};
+  if (!token || token !== process.env.DISCORD_PROXY_SECRET)
+    return res.status(401).json({ ok: false, reason: 'unauthorized' });
+  if (!hwid || typeof hwid !== 'string')
+    return res.status(400).json({ ok: false, reason: 'missing_fields' });
+
+  try {
+    const { error } = await supabase
+      .from('hwid_bans')
+      .upsert({ hwid, reason: reason || 'policy violation', banned_at: new Date().toISOString() });
+    if (error) throw error;
+    console.log(`[hwid/ban] banned hwid ${hwid.substring(0, 12)}... reason=${reason}`);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[hwid/ban] error:', err.message);
+    return res.status(500).json({ ok: false, reason: 'server_error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`STRK Loader website running on port ${PORT}`);
 });
